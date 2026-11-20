@@ -18,8 +18,7 @@
   <p id="message">正在隨機分派問卷，請稍候…</p>
   <a id="fallback" class="action" href="#" hidden>若未自動跳轉，請點此繼續</a>
   <p id="status" role="status" aria-live="polite"></p>
-  <p class="note">本頁僅用於問卷分派，不會收集您的姓名或電子郵件。</p>
-</main>
+  </main>
 <script>
 'use strict';
 // ====== 管理者設定：修改這裡即可 ======
@@ -66,7 +65,7 @@ if (active.length === 0) {
   fallback.href = selected.url;
   fallback.hidden = false;
   message.textContent = '正在前往問卷…';
-  status.textContent = '如果沒有自動跳轉，請點擊下方按鈕繼續。';
+  status.textContent = '如果沒有自動跳轉，請點擊按鈕繼續。';
 
   // 使用 replace 避免返回鍵重新回到分派頁面。
   // 部分 APP 內建瀏覽器可能阻擋自動跳轉，故保留可手動點擊的連結。
