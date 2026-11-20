@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>學術研究問卷｜隨機分派</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;color:#17212b;background:#f5f7fa}
+    body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;box-sizing:border-box}
+    main{width:min(100%,520px);background:#fff;border:1px solid #e5eaf0;border-radius:16px;padding:32px;box-shadow:0 12px 32px #182a4010}
+    h1{font-size:1.4rem;margin:0 0 12px}p{line-height:1.8;color:#4d5967}a.action{display:block;text-align:center;text-decoration:none;background:#185abc;color:white;border-radius:10px;padding:13px 22px;font-weight:600}a.action[hidden]{display:none}.note{font-size:.85rem}#status{min-height:1.5em}
+  </style>
+</head>
+<body>
+<main>
+  <h1>學術研究問卷</h1>
+  <p id="message">正在隨機分派問卷，請稍候…</p>
+  <a id="fallback" class="action" href="#" hidden>若未自動跳轉，請點此繼續</a>
+  <p id="status" role="status" aria-live="polite"></p>
+  <p class="note">本頁僅用於問卷分派，不會收集您的姓名或電子郵件。</p>
+</main>
+<script>
+'use strict';
+// ====== 管理者設定：修改這裡即可 ======
+const SURVEYS = [
+  { id: 'CHV_ACC', enabled: true,  url: 'https://example.com/survey-chv-acc' },
+  { id: 'CHV_DEF', enabled: true,  url: 'https://example.com/survey-chv-def' },
+  { id: 'OV_ACC',  enabled: true,  url: 'https://example.com/survey-ov-acc'  },
+  { id: 'OV_DEF',  enabled: true,  url: 'https://example.com/survey-ov-def'  }
+];
+// 若更換正式研究或需要重新開始分派，請修改此版本號。
+const STUDY_VERSION = 'main-study-v1';
+// ========================================
+const storageKey = 'thesis-assignment-' + STUDY_VERSION;
+const fallback = document.getElementById('fallback');
+const message = document.getElementById('message');
+const status = document.getElementById('status');
+const active = SURVEYS.filter(s => s.enabled && isValidUrl(s.url));
+function isValidUrl(url) {
+  try { const u = new URL(url); return u.protocol === 'https:' && u.hostname !== 'example.com'; }
+  catch { return false; }
+}
+function getSaved() {
+  try { return localStorage.getItem(storageKey); } catch { return null; }
+}
+function save(id) {
+  try { localStorage.setItem(storageKey, id); } catch { /* private browsing may block storage */ }
+}
+function chooseRandom(items) {
+  const buffer = new Uint32Array(1);
+  const limit = Math.floor(4294967296 / items.length) * items.length;
+  do { crypto.getRandomValues(buffer); } while (buffer[0] >= limit);
+  return items[buffer[0] % items.length];
+}
+if (active.length === 0) {
+  message.textContent = '目前暫停收件。';
+  status.textContent = '目前沒有開放中的問卷，請稍後再試。';
+} else {
+  // 同一瀏覽器盡可能維持原分派；關閉的組別不會再被選中。
+  const prior = active.find(s => s.id === getSaved());
+  const selected = prior || chooseRandom(active);
+  save(selected.id);
+
+  // 備用連結與自動跳轉使用同一個已抽中的網址，不會重抽。
+  fallback.href = selected.url;
+  fallback.hidden = false;
+  message.textContent = '正在前往問卷…';
+  status.textContent = '如果沒有自動跳轉，請點擊下方按鈕繼續。';
+
+  // 使用 replace 避免返回鍵重新回到分派頁面。
+  // 部分 APP 內建瀏覽器可能阻擋自動跳轉，故保留可手動點擊的連結。
+  window.location.replace(selected.url);
+}
+</script>
+</body>
+</html>
